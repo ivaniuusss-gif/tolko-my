@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Только Мы 💘</title>
+
+<style>
+body {
+  margin: 0;
+  font-family: Arial, sans-serif;
+  background: linear-gradient(135deg,#ffe5ec,#ffc2d1);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100vh;
+  text-align: center;
+}
+.container {
+  width: 90%;
+  max-width: 400px;
+}
+button {
+  width: 100%;
+  padding: 15px;
+  margin: 10px 0;
+  border-radius: 20px;
+  border: none;
+  font-size: 18px;
+  background: #ff4d6d;
+  color: white;
+}
+button:hover {
+  background: #d6336c;
+}
+#status {
+  margin-top: 20px;
+  font-size: 16px;
+}
+</style>
+</head>
+<body>
+
+<div class="container">
+<h1>Только Мы 💘</h1>
+
+<button onclick="choose('Vanya')">Я — Ваня</button>
+<button onclick="choose('Dasha')">Я — Даша</button>
+
+<p id="status">Выберите игрока</p>
+</div>
+
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+import { getDatabase, ref, set, onValue } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
+
+// 🔹 Вставь сюда свой Firebase config
+const firebaseConfig = {
+  apiKey: "AIzaSyAMw2ETvV791Ey-GAZS2tvC7YCmh9hmYzE",
+  authDomain: "tolko-my.firebaseapp.com",
+  databaseURL: "https://tolko-my-default-rtdb.firebaseio.com",
+  projectId: "tolko-my",
+  storageBucket: "tolko-my.firebasestorage.app",
+  messagingSenderId: "225895826961",
+  appId: "1:225895826961:web:ec97f88679cad003d953b0",
+  measurementId: "G-ZVJ80BYWS9"
+};
+
+const app = initializeApp(firebaseConfig);
+const db = getDatabase(app);
+
+// Функция выбора игрока
+window.choose = function(name){
+  set(ref(db, 'players/' + name), true);
+};
+
+// Слушаем базу, чтобы обновлять статус
+onValue(ref(db, 'players'), (snapshot)=>{
+  const data = snapshot.val();
+  if(data && data.Vanya && data.Dasha){
+    document.getElementById("status").innerText = "Оба игрока подключены ❤️";
+  } else {
+    document.getElementById("status").innerText = "Ожидание второго игрока...";
+  }
+});
+</script>
+
+</body>
+</html>
