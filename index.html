@@ -67,35 +67,34 @@ const firebaseConfig = {
   measurementId: "G-ZVJ80BYWS9"
 };
 
-// Инициализация Firebase
 const app = initializeApp(firebaseConfig);
 const db = getDatabase(app);
 
-// Ссылки на кнопки
-const btnVanya = document.getElementById("btnVanya");
-const btnDasha = document.getElementById("btnDasha");
-const status = document.getElementById("status");
+// Ждём полной загрузки DOM
+window.addEventListener('DOMContentLoaded', () => {
+  const btnVanya = document.getElementById("btnVanya");
+  const btnDasha = document.getElementById("btnDasha");
+  const status = document.getElementById("status");
 
-// Функции выбора игрока
-btnVanya.addEventListener("click", () => choose("Vanya"));
-btnDasha.addEventListener("click", () => choose("Dasha"));
-
-function choose(name){
-  set(ref(db, 'players/' + name), true);
-}
-
-// Слушаем базу и обновляем статус
-onValue(ref(db, 'players'), (snapshot)=>{
-  const data = snapshot.val();
-  if(data && data.Vanya && data.Dasha){
-    status.innerText = "Оба игрока подключены ❤️";
-  } else if(data && data.Vanya){
-    status.innerText = "Ваня подключился, ждём Дашу...";
-  } else if(data && data.Dasha){
-    status.innerText = "Даша подключилась, ждём Ваню...";
-  } else {
-    status.innerText = "Выберите игрока";
+  function choose(name){
+    set(ref(db, 'players/' + name), true);
   }
+
+  btnVanya.addEventListener("click", () => choose("Vanya"));
+  btnDasha.addEventListener("click", () => choose("Dasha"));
+
+  onValue(ref(db, 'players'), (snapshot)=>{
+    const data = snapshot.val();
+    if(data && data.Vanya && data.Dasha){
+      status.innerText = "Оба игрока подключены ❤️";
+    } else if(data && data.Vanya){
+      status.innerText = "Ваня подключился, ждём Дашу...";
+    } else if(data && data.Dasha){
+      status.innerText = "Даша подключилась, ждём Ваню...";
+    } else {
+      status.innerText = "Выберите игрока";
+    }
+  });
 });
 </script>
 
