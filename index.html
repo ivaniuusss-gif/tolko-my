@@ -1,10 +1,9 @@
 <!DOCTYPE html>
-<html>
+<html lang="ru">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Только Мы 💘</title>
-
 <style>
 body {
   margin: 0;
@@ -34,68 +33,116 @@ button {
 button:hover {
   background: #d6336c;
 }
-#status {
-  margin-top: 20px;
-  font-size: 16px;
+#card {
+  font-size: 20px;
+  margin: 20px 0;
+}
+#timer {
+  font-size: 18px;
+  margin-bottom: 10px;
+  color: #444;
 }
 </style>
 </head>
 <body>
 
 <div class="container">
-<h1>Только Мы 💘</h1>
-
-<button id="btnVanya">Я — Ваня</button>
-<button id="btnDasha">Я — Даша</button>
-
-<p id="status">Выберите игрока</p>
+  <h1>Только Мы 💘</h1>
+  
+  <div id="playerSelect">
+    <button id="btnVanya">Я — Ваня</button>
+    <button id="btnDasha">Я — Даша</button>
+  </div>
+  
+  <div id="game" style="display:none;">
+    <p id="timer">60</p>
+    <div id="card">Карточка появится здесь</div>
+    <button id="nextBtn">Следующая карточка</button>
+  </div>
+  
+  <div id="final" style="display:none;">
+    <h2>Вы отлично сыграли! ❤️</h2>
+    <p>Последнее задание: обнимите друг друга и скажите что-то приятное 😊</p>
+  </div>
 </div>
 
-<script type="module">
-import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-import { getDatabase, ref, set, onValue } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
+<script>
+const players = { Vanya: false, Dasha: false };
+let currentPlayer = "";
+const cards = [
+  { text: "Поцелуй партнёра ❤️", type: "action" },
+  { text: "Скажи комплимент 😊", type: "action" },
+  { text: "Громкий вопрос: Какой мой любимый фильм?", type: "shout" },
+  { text: "Обними партнёра 🤗", type: "action" },
+  { text: "Громкий вопрос: Что я ел на завтрак?", type: "shout" },
+  { text: "Сделай смешное лицо 🤪", type: "action" },
+  { text: "Громкий вопрос: Любимый цвет?", type: "shout" },
+  { text: "Скажи 'Я люблю тебя' ❤️", type: "action" },
+  { text: "Громкий вопрос: Любимая песня?", type: "shout" },
+  { text: "Приколись над партнёром 😆", type: "action" },
+  { text: "Скажи что-то милое 😘", type: "action" },
+  { text: "Сделай смешной танец 💃🕺", type: "action" },
+  { text: "Громкий вопрос: Любимый напиток?", type: "shout" },
+  { text: "Похвали партнёра 🌟", type: "action" },
+  { text: "Придумай комплимент на месте 😍", type: "action" },
+  { text: "Скажи забавную фразу 🤭", type: "action" },
+  { text: "Покажи смешное выражение лица 😜", type: "action" },
+  { text: "Сделай милый жест ✨", type: "action" },
+  { text: "Обними партнёра ещё раз 🤗", type: "action" },
+  { text: "Финальная карточка: скажите друг другу что-то приятное ❤️", type: "final" }
+];
 
-// 🔹 Вставь сюда свой Firebase config
-const firebaseConfig = {
-  apiKey: "AIzaSyAMw2ETvV791Ey-GAZS2tvC7YCmh9hmYzE",
-  authDomain: "tolko-my.firebaseapp.com",
-  databaseURL: "https://tolko-my-default-rtdb.firebaseio.com",
-  projectId: "tolko-my",
-  storageBucket: "tolko-my.firebasestorage.app",
-  messagingSenderId: "225895826961",
-  appId: "1:225895826961:web:ec97f88679cad003d953b0",
-  measurementId: "G-ZVJ80BYWS9"
-};
+let currentIndex = 0;
+let timerInterval;
 
-const app = initializeApp(firebaseConfig);
-const db = getDatabase(app);
+const btnVanya = document.getElementById("btnVanya");
+const btnDasha = document.getElementById("btnDasha");
+const playerSelect = document.getElementById("playerSelect");
+const gameDiv = document.getElementById("game");
+const cardDiv = document.getElementById("card");
+const timerEl = document.getElementById("timer");
+const nextBtn = document.getElementById("nextBtn");
+const finalDiv = document.getElementById("final");
 
-// Ждём полной загрузки DOM
-window.addEventListener('DOMContentLoaded', () => {
-  const btnVanya = document.getElementById("btnVanya");
-  const btnDasha = document.getElementById("btnDasha");
-  const status = document.getElementById("status");
+btnVanya.addEventListener("click", ()=> startGame("Vanya"));
+btnDasha.addEventListener("click", ()=> startGame("Dasha"));
+nextBtn.addEventListener("click", nextCard);
 
-  function choose(name){
-    set(ref(db, 'players/' + name), true);
+function startGame(player){
+  currentPlayer = player;
+  playerSelect.style.display = "none";
+  gameDiv.style.display = "block";
+  currentIndex = 0;
+  showCard();
+}
+
+function showCard(){
+  if(currentIndex >= cards.length){
+    gameDiv.style.display = "none";
+    finalDiv.style.display = "block";
+    return;
   }
-
-  btnVanya.addEventListener("click", () => choose("Vanya"));
-  btnDasha.addEventListener("click", () => choose("Dasha"));
-
-  onValue(ref(db, 'players'), (snapshot)=>{
-    const data = snapshot.val();
-    if(data && data.Vanya && data.Dasha){
-      status.innerText = "Оба игрока подключены ❤️";
-    } else if(data && data.Vanya){
-      status.innerText = "Ваня подключился, ждём Дашу...";
-    } else if(data && data.Dasha){
-      status.innerText = "Даша подключилась, ждём Ваню...";
-    } else {
-      status.innerText = "Выберите игрока";
+  const card = cards[currentIndex];
+  cardDiv.innerText = card.text;
+  let timeLeft = 60;
+  timerEl.innerText = timeLeft;
+  clearInterval(timerInterval);
+  timerInterval = setInterval(()=>{
+    timeLeft--;
+    timerEl.innerText = timeLeft;
+    if(timeLeft <=0){
+      clearInterval(timerInterval);
+      currentIndex++;
+      showCard();
     }
-  });
-});
+  }, 1000);
+}
+
+function nextCard(){
+  clearInterval(timerInterval);
+  currentIndex++;
+  showCard();
+}
 </script>
 
 </body>
