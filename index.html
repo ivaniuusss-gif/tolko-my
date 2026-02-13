@@ -4,21 +4,41 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Только Мы 💘</title>
+
+<!-- Google Fonts -->
+<link href="https://fonts.googleapis.com/css2?family=Pacifico&family=Roboto:wght@400;700&display=swap" rel="stylesheet">
+
 <style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
 body {
-  margin: 0;
-  font-family: Arial, sans-serif;
-  background: linear-gradient(135deg,#ffe5ec,#ffc2d1);
+  font-family: 'Roboto', sans-serif;
+  background: linear-gradient(135deg,#ffdde1,#ee9ca7);
+  height: 100vh;
   display: flex;
   justify-content: center;
   align-items: center;
-  height: 100vh;
-  text-align: center;
 }
+
 .container {
   width: 90%;
-  max-width: 400px;
+  max-width: 450px;
+  text-align: center;
+  background: rgba(255,255,255,0.95);
+  padding: 20px;
+  border-radius: 20px;
+  box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+  position: relative;
+  overflow: hidden;
 }
+
+h1 {
+  font-family: 'Pacifico', cursive;
+  font-size: 36px;
+  color: #ff4d6d;
+  margin-bottom: 20px;
+}
+
 button {
   width: 100%;
   padding: 15px;
@@ -29,37 +49,68 @@ button {
   background: #ff4d6d;
   color: white;
   cursor: pointer;
+  transition: 0.3s;
+  box-shadow: 0 4px 10px rgba(0,0,0,0.15);
 }
 button:hover {
   background: #d6336c;
+  transform: scale(1.05);
 }
+
 #card {
-  font-size: 20px;
+  font-size: 22px;
   margin: 20px 0;
+  min-height: 60px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  transition: opacity 0.5s;
 }
+
+#card.shout { color: #ff4d6d; font-weight: bold; }
 #timer {
   font-size: 18px;
   margin-bottom: 10px;
   color: #444;
 }
+
+#timerBar {
+  width: 100%;
+  height: 8px;
+  background: #eee;
+  border-radius: 4px;
+  overflow: hidden;
+  margin-bottom: 10px;
+}
+#timerFill {
+  height: 100%;
+  background: #ff4d6d;
+  width: 100%;
+  transition: width 1s linear;
+}
+
+#final h2 { color: #ff4d6d; font-family: 'Pacifico', cursive; }
+#final p { font-size: 18px; margin-top: 10px; color: #555; }
+
 </style>
 </head>
 <body>
 
 <div class="container">
   <h1>Только Мы 💘</h1>
-  
+
   <div id="playerSelect">
     <button id="btnVanya">Я — Ваня</button>
     <button id="btnDasha">Я — Даша</button>
   </div>
-  
+
   <div id="game" style="display:none;">
+    <div id="timerBar"><div id="timerFill"></div></div>
     <p id="timer">60</p>
-    <div id="card">Карточка появится здесь</div>
+    <div id="card"></div>
     <button id="nextBtn">Следующая карточка</button>
   </div>
-  
+
   <div id="final" style="display:none;">
     <h2>Вы отлично сыграли! ❤️</h2>
     <p>Последнее задание: обнимите друг друга и скажите что-то приятное 😊</p>
@@ -69,6 +120,7 @@ button:hover {
 <script>
 const players = { Vanya: false, Dasha: false };
 let currentPlayer = "";
+
 const cards = [
   { text: "Поцелуй партнёра ❤️", type: "action" },
   { text: "Скажи комплимент 😊", type: "action" },
@@ -94,6 +146,7 @@ const cards = [
 
 let currentIndex = 0;
 let timerInterval;
+let timeLeft = 60;
 
 const btnVanya = document.getElementById("btnVanya");
 const btnDasha = document.getElementById("btnDasha");
@@ -101,6 +154,7 @@ const playerSelect = document.getElementById("playerSelect");
 const gameDiv = document.getElementById("game");
 const cardDiv = document.getElementById("card");
 const timerEl = document.getElementById("timer");
+const timerFill = document.getElementById("timerFill");
 const nextBtn = document.getElementById("nextBtn");
 const finalDiv = document.getElementById("final");
 
@@ -123,13 +177,24 @@ function showCard(){
     return;
   }
   const card = cards[currentIndex];
-  cardDiv.innerText = card.text;
-  let timeLeft = 60;
-  timerEl.innerText = timeLeft;
+  cardDiv.style.opacity = 0;
+  setTimeout(()=>{
+    cardDiv.innerText = card.text;
+    cardDiv.className = card.type === "shout" ? "shout" : "";
+    cardDiv.style.opacity = 1;
+    startTimer();
+  }, 300);
+}
+
+function startTimer(){
   clearInterval(timerInterval);
+  timeLeft = 60;
+  timerEl.innerText = timeLeft;
+  timerFill.style.width = "100%";
   timerInterval = setInterval(()=>{
     timeLeft--;
     timerEl.innerText = timeLeft;
+    timerFill.style.width = (timeLeft/60*100) + "%";
     if(timeLeft <=0){
       clearInterval(timerInterval);
       currentIndex++;
