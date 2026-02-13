@@ -1,0 +1,451 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>Только Мы: Гармония</title>
+    
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Pacifico&family=Quicksand:wght@400;600;700&display=swap" rel="stylesheet">
+
+    <style>
+        /* --- 1. SETTINGS & RESET --- */
+        :root {
+            --primary: #FF8E9E;      /* Нежно-розовый */
+            --primary-dark: #FF6B81;
+            --success: #6ab04c;      /* Мятно-зеленый для "Правильно" */
+            --skip: #95afc0;         /* Серый для "Пропуск" */
+            --text: #2d3436;
+            --white-glass: rgba(255, 255, 255, 0.85);
+            --shadow: 0 10px 30px rgba(0,0,0,0.1);
+            --radius: 24px;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; user-select: none; }
+
+        body {
+            font-family: 'Quicksand', sans-serif;
+            height: 100dvh; /* Dynamic Viewport Height для мобильных */
+            width: 100%;
+            overflow: hidden;
+            color: var(--text);
+            position: relative;
+            background-color: #fce4ec;
+        }
+
+        /* --- 2. ADVANCED ANIMATED BACKGROUND --- */
+        .bg-blobs {
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 100%;
+            z-index: -1;
+            overflow: hidden;
+            background: #fff0f3;
+        }
+        
+        .blob {
+            position: absolute;
+            border-radius: 50%;
+            filter: blur(60px);
+            opacity: 0.6;
+            animation: float 20s infinite alternate;
+        }
+        
+        .blob-1 { width: 300px; height: 300px; background: #a29bfe; top: -50px; left: -50px; animation-duration: 25s; }
+        .blob-2 { width: 400px; height: 400px; background: #ff7675; bottom: -100px; right: -50px; animation-duration: 30s; }
+        .blob-3 { width: 250px; height: 250px; background: #81ecec; top: 40%; left: 30%; animation-duration: 20s; opacity: 0.4; }
+
+        @keyframes float {
+            0% { transform: translate(0, 0) scale(1); }
+            100% { transform: translate(30px, 50px) scale(1.1); }
+        }
+
+        /* --- 3. LAYOUT --- */
+        #app {
+            width: 100%; height: 100%;
+            display: flex; flex-direction: column;
+            padding: env(safe-area-inset-top) 20px env(safe-area-inset-bottom) 20px; /* Учет челки iPhone */
+            position: relative;
+        }
+
+        .screen {
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            display: flex; flex-direction: column;
+            align-items: center; justify-content: center;
+            transition: opacity 0.4s ease, transform 0.4s ease;
+            opacity: 0; pointer-events: none;
+            padding: 20px;
+        }
+        .screen.active { opacity: 1; pointer-events: all; transform: scale(1); }
+        .screen.hidden { opacity: 0; transform: scale(0.95); }
+
+        /* --- 4. COMPONENTS --- */
+        
+        /* Typography */
+        h1 { font-family: 'Pacifico', cursive; font-size: 3rem; color: var(--primary-dark); text-shadow: 2px 2px 0px rgba(255,255,255,0.5); margin-bottom: 20px; text-align: center; }
+        h2 { font-size: 1.3rem; margin-bottom: 30px; color: #636e72; text-align: center; font-weight: 600; }
+
+        /* Buttons */
+        .btn {
+            background: white; border: none; padding: 18px 0; width: 100%;
+            border-radius: 20px; font-size: 1.1rem; font-weight: 700;
+            color: var(--text); box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+            margin-bottom: 12px; cursor: pointer; transition: 0.2s;
+            display: flex; align-items: center; justify-content: center; gap: 10px;
+        }
+        .btn:active { transform: scale(0.97); }
+        .btn-start { background: linear-gradient(135deg, var(--primary), var(--primary-dark)); color: white; box-shadow: 0 8px 20px rgba(255, 107, 129, 0.4); }
+
+        /* Score Board (Top) */
+        .score-board {
+            position: absolute; top: max(20px, env(safe-area-inset-top)); 
+            width: calc(100% - 40px);
+            background: var(--white-glass); backdrop-filter: blur(10px);
+            padding: 10px 20px; border-radius: 50px;
+            display: flex; justify-content: space-between; align-items: center;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.05);
+            z-index: 100;
+            border: 1px solid rgba(255,255,255,0.6);
+        }
+        .score-item { display: flex; flex-direction: column; align-items: center; opacity: 0.5; transition: 0.3s; }
+        .score-item.active-turn { opacity: 1; transform: scale(1.1); }
+        .score-name { font-size: 0.75rem; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; }
+        .score-val { font-size: 1.4rem; font-weight: 800; color: var(--primary-dark); line-height: 1; }
+        .score-val.pop { animation: pop 0.3s ease; }
+
+        @keyframes pop { 50% { transform: scale(1.5); color: var(--success); } }
+
+        /* Game Card */
+        .game-layout {
+            display: flex; flex-direction: column; width: 100%; height: 100%;
+            padding-top: 80px; /* Space for scoreboard */
+            justify-content: space-between;
+        }
+
+        .card {
+            background: var(--white-glass);
+            border-radius: 30px;
+            padding: 30px 20px;
+            flex-grow: 1;
+            max-height: 60vh;
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
+            text-align: center;
+            box-shadow: var(--shadow);
+            border: 1px solid rgba(255,255,255,0.8);
+            position: relative;
+            margin-bottom: 20px;
+            transition: transform 0.3s ease, opacity 0.3s;
+        }
+
+        .card.loud { border: 3px solid #ff7675; background: #fff0f0; }
+        .card.loud h3 { color: #d63031; }
+
+        .card-tag {
+            position: absolute; top: -12px;
+            background: var(--primary); color: white;
+            padding: 6px 16px; border-radius: 20px;
+            font-size: 0.8rem; font-weight: 700; text-transform: uppercase; letter-spacing: 1px;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+        }
+
+        .card-text { font-size: 1.5rem; line-height: 1.4; font-weight: 600; color: #2d3436; }
+
+        /* Controls */
+        .controls { display: flex; gap: 15px; width: 100%; margin-bottom: 20px; }
+        .btn-control {
+            flex: 1; padding: 20px; border-radius: 25px;
+            font-size: 1rem; font-weight: 700; border: none; color: white;
+            cursor: pointer; box-shadow: 0 5px 15px rgba(0,0,0,0.15);
+            display: flex; flex-direction: column; align-items: center; gap: 5px;
+            transition: transform 0.1s;
+        }
+        .btn-control:active { transform: scale(0.95); }
+        .btn-yes { background: var(--success); }
+        .btn-no { background: var(--skip); opacity: 0.8; }
+
+        /* Timer */
+        .timer-wrap { width: 100%; margin-bottom: 20px; }
+        .timer-bar-bg { width: 100%; height: 6px; background: rgba(0,0,0,0.05); border-radius: 10px; overflow: hidden; }
+        .timer-bar-fill { height: 100%; background: var(--primary); width: 100%; transition: width 1s linear; }
+        .timer-num { font-size: 1.2rem; font-weight: bold; color: var(--primary-dark); margin-bottom: 5px; display: block; text-align: right; }
+
+    </style>
+</head>
+<body>
+
+    <div class="bg-blobs">
+        <div class="blob blob-1"></div>
+        <div class="blob blob-2"></div>
+        <div class="blob blob-3"></div>
+    </div>
+
+    <div id="app">
+        
+        <div id="screen-start" class="screen active">
+            <h1>Только Мы</h1>
+            <h2>Игра на гармонию</h2>
+            
+            <div style="width: 100%; max-width: 300px;">
+                <button class="btn btn-start" onclick="startGame('Ваня')">
+                    <span>💙</span> Начинает Ваня
+                </button>
+                <button class="btn btn-start" onclick="startGame('Даша')">
+                    <span>💖</span> Начинает Даша
+                </button>
+            </div>
+            
+            <p style="margin-top: 20px; font-size: 0.9rem; opacity: 0.6;">
+                Правила: Отвечай честно. Если партнеру нравится ответ — жми "Супер".
+            </p>
+        </div>
+
+        <div id="screen-game" class="screen">
+            <div class="score-board">
+                <div class="score-item" id="score-p1">
+                    <span class="score-name">Ваня</span>
+                    <span class="score-val" id="val-p1">0</span>
+                </div>
+                <div style="font-size: 0.8rem; font-weight: bold; color: #b2bec3;">VS</div>
+                <div class="score-item" id="score-p2">
+                    <span class="score-name">Даша</span>
+                    <span class="score-val" id="val-p2">0</span>
+                </div>
+            </div>
+
+            <div class="game-layout">
+                <div></div>
+
+                <div class="card" id="game-card">
+                    <div class="card-tag" id="card-tag">Обычный вопрос</div>
+                    <div class="card-text" id="question-text">Загрузка...</div>
+                </div>
+
+                <div style="width: 100%;">
+                    <div class="timer-wrap">
+                        <span class="timer-num" id="timer-num">60</span>
+                        <div class="timer-bar-bg">
+                            <div class="timer-bar-fill" id="timer-fill"></div>
+                        </div>
+                    </div>
+
+                    <div class="controls">
+                        <button class="btn-control btn-no" onclick="handleAnswer(false)">
+                            <span>🤔</span>
+                            <span>Сложно</span>
+                        </button>
+                        <button class="btn-control btn-yes" onclick="handleAnswer(true)">
+                            <span>😍</span>
+                            <span>Супер (+1)</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div id="screen-end" class="screen">
+            <h1>Гармония!</h1>
+            
+            <div style="background: var(--white-glass); padding: 30px; border-radius: 30px; text-align: center; margin-bottom: 20px; width: 100%; box-shadow: var(--shadow);">
+                <div style="font-size: 4rem; margin-bottom: 10px;">✨</div>
+                <h2 style="margin-bottom: 10px; color: var(--primary-dark);">Общий счет: <span id="final-score">0</span></h2>
+                <p style="font-size: 1rem; color: #636e72;">Вы стали еще ближе!</p>
+            </div>
+
+            <div class="card" style="min-height: auto; width: 100%;">
+                <p style="font-size: 0.9rem; color: #aaa; text-transform: uppercase; font-weight: bold;">Финальное задание</p>
+                <p style="font-size: 1.2rem; font-weight: bold; margin-top: 10px;">Сделайте селфи прямо сейчас и поцелуйтесь! 📸💋</p>
+            </div>
+
+            <button class="btn btn-start" onclick="location.reload()" style="margin-top: 20px;">
+                Сыграть еще раз
+            </button>
+        </div>
+
+    </div>
+
+    <script>
+        /* --- DATA --- */
+        const questions = [
+            { t: "Какое у тебя самое теплое воспоминание о нас?", tag: "normal" },
+            { t: "За что ты меня ценишь больше всего?", tag: "normal" },
+            { t: "Что в моем поведении тебя иногда бесит?", tag: "loud" },
+            { t: "Какой мой поступок заставил тебя улыбнуться на этой неделе?", tag: "normal" },
+            { t: "Опиши наш идеальный вечер.", tag: "normal" },
+            { t: "Есть ли у меня привычка, которая кажется тебе странной?", tag: "loud" },
+            { t: "Какую мою черту характера ты бы хотел(а) перенять?", tag: "normal" },
+            { t: "Если бы мы снимали фильм про нас, какой это был бы жанр?", tag: "normal" },
+            { t: "В какой момент ты понял(а), что я — твой человек?", tag: "normal" },
+            { t: "Кто из нас более ревнивый?", tag: "loud" },
+            { t: "Самое вкусное блюдо, которое мы ели вместе?", tag: "normal" },
+            { t: "Какая песня напоминает тебе обо мне?", tag: "normal" },
+            { t: "Что бы ты хотел(а) изменить в наших отношениях?", tag: "loud" },
+            { t: "Куда мы должны обязательно поехать вместе?", tag: "normal" },
+            { t: "Чего ты боишься в будущем?", tag: "loud" },
+            { t: "Назови 3 причины, почему ты меня любишь.", tag: "normal" },
+            { t: "Что я делаю лучше всех?", tag: "normal" },
+            { t: "Твой любимый момент из нашего первого свидания?", tag: "normal" },
+            { t: "Если бы у нас был миллион долларов, что бы мы купили первым?", tag: "normal" },
+            { t: "Просто обними меня крепко на 10 секунд.", tag: "action" }
+        ];
+
+        /* --- STATE --- */
+        const state = {
+            p1: { name: "Ваня", score: 0 },
+            p2: { name: "Даша", score: 0 },
+            turn: 0, // 0 for p1, 1 for p2
+            cards: [],
+            cardIdx: 0,
+            timer: 60,
+            interval: null
+        };
+
+        /* --- LOGIC --- */
+        
+        function shuffle(arr) {
+            return arr.sort(() => Math.random() - 0.5);
+        }
+
+        function startGame(starterName) {
+            // Setup names based on who clicked start
+            if(starterName === "Даша") {
+                state.p1.name = "Даша";
+                state.p2.name = "Ваня";
+            } else {
+                state.p1.name = "Ваня";
+                state.p2.name = "Даша";
+            }
+
+            // UI Init
+            document.querySelector('#score-p1 .score-name').innerText = state.p1.name;
+            document.querySelector('#score-p2 .score-name').innerText = state.p2.name;
+            
+            state.cards = shuffle([...questions]);
+            state.cardIdx = 0;
+            state.turn = 0;
+
+            changeScreen('screen-start', 'screen-game');
+            updateTurnUI();
+            renderCard();
+        }
+
+        function changeScreen(fromId, toId) {
+            document.getElementById(fromId).classList.add('hidden');
+            document.getElementById(fromId).classList.remove('active');
+            
+            setTimeout(() => {
+                document.getElementById(toId).classList.add('active');
+            }, 300);
+        }
+
+        function updateTurnUI() {
+            const p1El = document.getElementById('score-p1');
+            const p2El = document.getElementById('score-p2');
+            
+            if(state.turn === 0) {
+                p1El.classList.add('active-turn');
+                p2El.classList.remove('active-turn');
+            } else {
+                p1El.classList.remove('active-turn');
+                p2El.classList.add('active-turn');
+            }
+        }
+
+        function renderCard() {
+            if(state.cardIdx >= state.cards.length) {
+                finishGame();
+                return;
+            }
+
+            const cardData = state.cards[state.cardIdx];
+            const cardEl = document.getElementById('game-card');
+            const txtEl = document.getElementById('question-text');
+            const tagEl = document.getElementById('card-tag');
+
+            // Animation Reset
+            cardEl.style.opacity = 0;
+            cardEl.style.transform = "scale(0.9)";
+            
+            setTimeout(() => {
+                // Update Data
+                txtEl.innerText = cardData.t;
+                
+                // Styles based on tag
+                cardEl.className = 'card'; // reset
+                if(cardData.tag === 'loud') {
+                    cardEl.classList.add('loud');
+                    tagEl.innerText = "🔥 Острый вопрос";
+                    tagEl.style.background = "#ff7675";
+                } else if (cardData.tag === 'action') {
+                    tagEl.innerText = "💛 Действие";
+                    tagEl.style.background = "#fbc531";
+                } else {
+                    tagEl.innerText = "✨ Вопрос";
+                    tagEl.style.background = "var(--primary)";
+                }
+
+                // Show
+                cardEl.style.opacity = 1;
+                cardEl.style.transform = "scale(1)";
+                startTimer();
+            }, 200);
+        }
+
+        function handleAnswer(isCorrect) {
+            // Add Score
+            if(isCorrect) {
+                if(state.turn === 0) {
+                    state.p1.score++;
+                    animateScore('val-p1', state.p1.score);
+                } else {
+                    state.p2.score++;
+                    animateScore('val-p2', state.p2.score);
+                }
+            }
+
+            // Next logic
+            state.cardIdx++;
+            state.turn = state.turn === 0 ? 1 : 0;
+            updateTurnUI();
+            renderCard();
+        }
+
+        function animateScore(id, val) {
+            const el = document.getElementById(id);
+            el.innerText = val;
+            el.classList.remove('pop');
+            void el.offsetWidth; // trigger reflow
+            el.classList.add('pop');
+        }
+
+        function startTimer() {
+            clearInterval(state.interval);
+            state.timer = 60;
+            updateTimerVis();
+
+            state.interval = setInterval(() => {
+                state.timer--;
+                updateTimerVis();
+                if(state.timer <= 0) {
+                    clearInterval(state.interval);
+                    // Time is up -> count as skip (or you can auto-skip)
+                }
+            }, 1000);
+        }
+
+        function updateTimerVis() {
+            document.getElementById('timer-num').innerText = state.timer;
+            document.getElementById('timer-fill').style.width = (state.timer / 60 * 100) + "%";
+            
+            if(state.timer < 10) document.getElementById('timer-fill').style.background = "#ff7675";
+            else document.getElementById('timer-fill').style.background = "var(--primary)";
+        }
+
+        function finishGame() {
+            clearInterval(state.interval);
+            changeScreen('screen-game', 'screen-end');
+            document.getElementById('final-score').innerText = state.p1.score + state.p2.score;
+        }
+
+    </script>
+</body>
+</html>
