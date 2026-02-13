@@ -29,6 +29,7 @@ button {
   font-size: 18px;
   background: #ff4d6d;
   color: white;
+  cursor: pointer;
 }
 button:hover {
   background: #d6336c;
@@ -44,15 +45,15 @@ button:hover {
 <div class="container">
 <h1>Только Мы 💘</h1>
 
-<button onclick="choose('Vanya')">Я — Ваня</button>
-<button onclick="choose('Dasha')">Я — Даша</button>
+<button id="btnVanya">Я — Ваня</button>
+<button id="btnDasha">Я — Даша</button>
 
 <p id="status">Выберите игрока</p>
 </div>
 
 <script type="module">
-import { initializeApp } from "firebase/app";
-import { getAnalytics } from "firebase/analytics";
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+import { getDatabase, ref, set, onValue } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
 
 // 🔹 Вставь сюда свой Firebase config
 const firebaseConfig = {
@@ -66,21 +67,34 @@ const firebaseConfig = {
   measurementId: "G-ZVJ80BYWS9"
 };
 
+// Инициализация Firebase
 const app = initializeApp(firebaseConfig);
 const db = getDatabase(app);
 
-// Функция выбора игрока
-window.choose = function(name){
-  set(ref(db, 'players/' + name), true);
-};
+// Ссылки на кнопки
+const btnVanya = document.getElementById("btnVanya");
+const btnDasha = document.getElementById("btnDasha");
+const status = document.getElementById("status");
 
-// Слушаем базу, чтобы обновлять статус
+// Функции выбора игрока
+btnVanya.addEventListener("click", () => choose("Vanya"));
+btnDasha.addEventListener("click", () => choose("Dasha"));
+
+function choose(name){
+  set(ref(db, 'players/' + name), true);
+}
+
+// Слушаем базу и обновляем статус
 onValue(ref(db, 'players'), (snapshot)=>{
   const data = snapshot.val();
   if(data && data.Vanya && data.Dasha){
-    document.getElementById("status").innerText = "Оба игрока подключены ❤️";
+    status.innerText = "Оба игрока подключены ❤️";
+  } else if(data && data.Vanya){
+    status.innerText = "Ваня подключился, ждём Дашу...";
+  } else if(data && data.Dasha){
+    status.innerText = "Даша подключилась, ждём Ваню...";
   } else {
-    document.getElementById("status").innerText = "Ожидание второго игрока...";
+    status.innerText = "Выберите игрока";
   }
 });
 </script>
